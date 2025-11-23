@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frostember</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+    <style>
+
+ #btn-start {
+    transition: opacity 0.5s ease-in-out;
+}
+
+
+        :root {
+            --bg-color: #000000;
+            --panel-color: #0b0b0d;
+            --accent-color: #ffb66b;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'VT323', monospace;
+            color: #a1a1aa;
+            overflow: hidden;
+        }
+
+        .panel {
+            background-color: var(--panel-color);
+            border: 2px solid #3f3f46;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #18181b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border: 1px solid #000; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+        canvas {
+            image-rendering: pixelated;
+            width: 100%;
+            height: 100%;
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+            top: 0;
+            left: 0;
+        }
+
+        .btn-retro {
+            background-color: #000;
+            border: 2px solid #3f3f46;
+            color: #a1a1aa;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.1s;
+            box-shadow: 4px 4px 0px 0px #27272a;
+        }
+        .btn-retro:hover:not(:disabled) {
+            background-color: #18181b;
+            border-color: #71717a;
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .btn-retro:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0px 0px 0px 0px #27272a;
+        }
+        .btn-retro:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .btn-desperate {
+            animation: pulse-red 1s infinite;
+            border-color: #991b1b;
+            color: #fca5a5;
+        }
+        
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 5px #7f1d1d; }
+            50% { box-shadow: 0 0 15px #dc2626; }
+        }
+
+        /* Center Popup Animation */
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -60%); }
+            10% { opacity: 1; transform: translate(-50%, -50%); }
+            90% { opacity: 1; transform: translate(-50%, -50%); }
+            100% { opacity: 0; transform: translate(-50%, -40%); }
+        }
+        .popup-flash {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #000;
+            border: 2px solid #fff;
+            padding: 20px;
+            z-index: 100;
+            color: #fff;
+            font-size: 1.5rem;
+            text-align: center;
+            max-width: 80%;
+            animation: fadeInOut 3s forwards;
+            pointer-events: none;
+        }
+
+        /* Top Right Notification Animation */
+        @keyframes slideInRight {
+            0% { opacity: 0; transform: translateX(100%); }
+            10% { opacity: 1; transform: translateX(0); }
+            90% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(10px); }
+        }
+        .notification-toast {
+            position: fixed;
+            top: 80px; /* Below header */
+            right: 20px;
+            background: #000;
+            border: 1px solid #4ade80; /* Green border */
+            color: #4ade80;
+            padding: 12px 20px;
+            z-index: 90;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+            animation: slideInRight 2.5s forwards;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Glitch Effect for Story */
+        .glitch-text {
+            position: relative;
+            color: #e4e4e7;
+        }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+        .glitch-text::before {
+            color: #f00;
+            z-index: -1;
+            animation: glitch-anim-1 2s infinite linear alternate-reverse;
+        }
+        .glitch-text::after {
+            color: #00f;
+            z-index: -2;
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        
+        @keyframes glitch-anim-1 {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); }
+            100% { clip-path: inset(30% 0 50% 0); transform: translate(1px, -1px); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px); }
+            20% { clip-path: inset(80% 0 5% 0); transform: translate(-2px, 2px); }
+            40% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 1px); }
+            60% { clip-path: inset(15% 0 80% 0); transform: translate(-1px, -2px); }
+            80% { clip-path: inset(55% 0 10% 0); transform: translate(1px, 2px); }
+            100% { clip-path: inset(40% 0 30% 0); transform: translate(-2px, -1px); }
+        }
+
+        .hidden { display: none !important; }
+        .masked-text { background: #333; color: #333; user-select: none; }
+
+        /* Intro Screen */
+        #intro-screen {
+            position: fixed;
+            inset: 0;
+            background: black;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #a1a1aa;
+            font-size: 1.5rem;
+            text-align: center;
+            padding: 2rem;
+            
+        }
+        .intro-text {
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        /* Weather Effects */
+        .blizzard-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(200, 220, 255, 0.1);
+            pointer-events: none;
+            z-index: 10;
+            animation: flash-white 0.2s infinite;
+            display: none;
+        }
+        @keyframes flash-white {
+            0%, 100% { opacity: 0.1; }
+            50% { opacity: 0.2; }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen p-2 md:p-4 flex flex-col gap-3 selection:bg-orange-900 selection:text-white">
+
+    <div class="scanline"></div>
+
+<div id="start-screen" style="position:fixed; inset:0; background:black; display:flex; align-items:center; justify-content:center; z-index:200;">
+  <button id="btn-start" class="btn-retro px-8 py-4 text-2xl">Start</button>
+</div>
+
+
+<!-- INTRO SCREEN -->
+<div id="intro-screen">
+  <div id="intro-content" class="intro-text max-w-2xl leading-relaxed tracking-widest"></div>
+  
+</div>
+
+
+
+
+
+    <!-- POPUP LAYER -->
+    <div id="popup-layer"></div>
+    <div id="notification-layer"></div>
+
+    <!-- DEATH SCREEN -->
+    <div id="death-screen" class="fixed inset-0 bg-black z-[60] flex flex-col items-center justify-center hidden">
+        <h1 class="text-6xl mb-4 text-red-800 uppercase tracking-widest">You Died</h1>
+        <p class="text-2xl mb-8 text-zinc-500">The frost claimed another.</p>
+        <button onclick="window.location.reload()" class="btn-retro px-8 py-4 text-2xl">
+            Begin Again
+        </button>
+    </div>
+
+    <!-- GAME UI (Initially Hidden via opacity for fade in) -->
+    <div id="game-container" class="flex-1 flex flex-col gap-3 opacity-0 transition-opacity duration-2000 h-full">
+        <!-- TOP BAR: HEALTH -->
+        <header class="h-12 flex items-center justify-between px-2 shrink-0">
+            <div class="text-2xl text-zinc-500 tracking-widest w-32">FROSTEMBER</div>
+            
+            <!-- Health Bar -->
+            <div class="flex-1 max-w-2xl mx-4 h-6 bg-[#18181b] border border-zinc-700 p-1 relative">
+                <div id="bar-health" class="h-full bg-gradient-to-r from-red-900 to-red-600 transition-all duration-500" style="width: 100%"></div>
+                <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center text-sm text-white mix-blend-difference tracking-wider uppercase">Health</div>
+            </div>
+            
+            <div class="text-xl text-zinc-500 w-32 text-right">DAY <span id="val-day">1</span></div>
+        </header>
+
+        <!-- MAIN GRID -->
+        <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden pb-2">
+            
+            <!-- LEFT: STORY PANEL (3 cols) -->
+            <div class="lg:col-span-3 panel flex flex-col overflow-hidden order-2 lg:order-1">
+                <div class="bg-black border-b border-zinc-800 p-2 text-zinc-500 uppercase tracking-widest text-center text-lg">
+                    Memory
+                </div>
+                <div id="story-container" class="flex-1 overflow-y-auto p-4 space-y-4 font-serif text-lg leading-relaxed text-zinc-400">
+                    <!-- Story Sentences -->
+                </div>
+            </div>
+
+            <!-- CENTER: CANVAS & CONTROLS (6 cols) -->
+            <div class="lg:col-span-6 flex flex-col gap-4 order-1 lg:order-2 h-full">
+                
+                <!-- Canvas Display -->
+                <div class="panel flex-1 relative bg-black flex flex-col p-1 overflow-hidden">
+                    <div class="absolute top-2 left-2 z-10 bg-black/80 px-2 py-1 border border-zinc-800 text-zinc-400 text-sm uppercase tracking-widest">
+                        <span id="mode-indicator">STATION</span>
+                    </div>
+                    
+                    <!-- Weather Indicator -->
+                    <div id="weather-indicator" class="absolute top-2 right-2 z-10 bg-black/80 px-2 py-1 border border-zinc-800 text-blue-300 text-sm uppercase tracking-widest hidden">
+                        CLEAR SKY
+                    </div>
+
+                    <div id="blizzard-fx" class="blizzard-overlay"></div>
+
+                    <canvas id="game-canvas" width="640" height="360" class="w-full h-full cursor-crosshair"></canvas>
+                    
+                    <!-- Overlay for Passive Events/Feedback -->
+                    <div id="canvas-feedback" class="absolute bottom-4 right-4 text-orange-400 text-xl font-bold opacity-0 transition-opacity"></div>
+                </div>
+
+                <!-- Vitals & Actions Box -->
+                <div class="panel p-4 grid grid-cols-12 gap-4 h-auto shrink-0">
+                    
+                    <!-- Vitals (Left side of controls) -->
+                    <div class="col-span-4 flex gap-2 h-full">
+                        <!-- Warmth -->
+                        <div class="flex-1 flex flex-col h-full">
+                            <div class="h-full bg-[#18181b] border border-zinc-700 relative flex flex-col justify-end p-1">
+                                <div id="bar-warmth" class="w-full bg-gradient-to-t from-blue-900 via-purple-900 to-red-600 transition-all duration-500" style="height: 50%"></div>
+                            </div>
+                            <div class="text-center text-zinc-500 uppercase text-sm mt-1">Warmth</div>
+                        </div>
+                        <!-- Hunger -->
+                        <div class="flex-1 flex flex-col h-full">
+                            <div class="h-full bg-[#18181b] border border-zinc-700 relative flex flex-col justify-end p-1">
+                                <div id="bar-hunger" class="w-full bg-gradient-to-t from-red-900 to-emerald-700 transition-all duration-500" style="height: 100%"></div>
+                            </div>
+                            <div class="text-center text-zinc-500 uppercase text-sm mt-1">Hunger</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons (Right side of controls) -->
+                    <div class="col-span-8 grid grid-cols-2 gap-2 relative">
+                        
+                        <!-- Desperate Action (Z-20, covers station buttons but NOT eat/travel) -->
+                        <button id="btn-rub" class="hidden absolute top-0 left-0 w-full h-full z-20 btn-retro btn-desperate text-xl flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
+                            <i data-lucide="hand" size="32" class="mb-1"></i>
+                            <span>RUB HANDS (+HEAT)</span>
+                            <span class="text-xs opacity-70">-1 Hunger</span>
+                        </button>
+
+                        <!-- Station Mode Buttons -->
+                        <button id="btn-stoke" class="btn-retro h-12 flex items-center justify-center gap-2 station-btn">
+                            <i data-lucide="flame" size="18"></i> Stoke Fire
+                        </button>
+                        
+                        <div class="station-btn relative group">
+                            <button id="btn-drone" class="btn-retro h-12 w-full flex items-center justify-center gap-2">
+                                <i data-lucide="plane" size="18"></i> <span id="drone-label">Send Drone</span>
+                            </button>
+                            <!-- Drone Integrity Bar -->
+                            <div class="absolute bottom-0 left-0 w-full h-1 bg-zinc-800">
+                                <div id="drone-integrity" class="h-full bg-green-500 transition-all" style="width: 100%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Fuse & Scavenge split row -->
+                        <button id="btn-fuse" class="btn-retro h-12 flex items-center justify-center gap-2 station-btn bg-zinc-900">
+                            <i data-lucide="zap" size="18"></i> Fuse
+                        </button>
+                        
+                        <button id="btn-scavenge-station" class="btn-retro h-12 flex items-center justify-center gap-2 station-btn bg-zinc-900 text-sm">
+                             <i data-lucide="search" size="18"></i> Scavenge
+                        </button>
+
+                        <!-- Forest Mode Buttons -->
+                        <button id="btn-gather-manual" class="btn-retro h-12 flex items-center justify-center gap-2 forest-btn hidden col-span-2 border-dashed">
+                            <i data-lucide="axe" size="18"></i> (Click Canvas to Gather)
+                        </button>
+
+                        <!-- Shared Buttons (Z-30 to float ABOVE rub-hands overlay) -->
+                        <button id="btn-eat" class="relative z-30 btn-retro h-12 flex items-center justify-center gap-2">
+                            <i data-lucide="utensils" size="18"></i> Eat Food
+                        </button>
+                        <button id="btn-travel" class="relative z-30 btn-retro h-12 flex items-center justify-center gap-2 text-orange-300 border-orange-900/50">
+                            To Forest
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: INVENTORY & LOG (3 cols) -->
+            <div class="lg:col-span-3 flex flex-col gap-4 order-3 h-full overflow-hidden">
+                
+                <!-- Log -->
+                <div class="panel h-1/3 flex flex-col overflow-hidden">
+                    <div class="bg-black border-b border-zinc-800 p-2 text-zinc-500 uppercase tracking-widest text-center text-sm">
+                        System Log
+                    </div>
+                    <div id="log-container" class="flex-1 overflow-y-auto p-2 font-mono text-sm space-y-1">
+                        <!-- Logs -->
+                    </div>
+                </div>
+
+                <!-- Inventory -->
+                <div class="panel flex-1 flex flex-col overflow-hidden">
+                    <div class="bg-black border-b border-zinc-800 p-2 text-zinc-500 uppercase tracking-widest text-center text-lg">
+                        Cargo
+                    </div>
+                    <div class="p-2 space-y-2 overflow-y-auto flex-1">
+                        <!-- Resources -->
+                        <div class="flex justify-between items-center p-2 bg-zinc-900/50 border border-zinc-800">
+                            <span class="flex items-center gap-2 text-zinc-400"><i data-lucide="wind" size="16"></i> Wood</span>
+                            <span id="inv-wood" class="text-xl text-white">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 bg-zinc-900/50 border border-zinc-800">
+                            <span class="flex items-center gap-2 text-zinc-400"><i data-lucide="utensils" size="16"></i> Food</span>
+                            <span id="inv-food" class="text-xl text-white">0</span>
+                        </div>
+
+                        <!-- Specific Food Items -->
+                        <div class="bg-zinc-950 border border-zinc-800 p-2 text-sm text-zinc-500">
+                            <div class="uppercase tracking-widest text-xs mb-2 text-zinc-600">Provisions</div>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-1">
+                                <div class="flex justify-between"><span>Frostberries</span> <span id="food-berries" class="text-zinc-300">0</span></div>
+                                <div class="flex justify-between"><span>Pine Nuts</span> <span id="food-nuts" class="text-zinc-300">0</span></div>
+                                <div class="flex justify-between"><span>Tundra Root</span> <span id="food-root" class="text-zinc-300">0</span></div>
+                                <div class="flex justify-between"><span>Canned</span> <span id="food-canned" class="text-zinc-300">0</span></div>
+                            </div>
+                        </div>
+
+                        <div class="h-px bg-zinc-800 my-2"></div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div class="flex justify-between px-2 py-1 bg-black border border-zinc-800 text-zinc-500">
+                                <span>Metal</span><span id="inv-metal">0</span>
+                            </div>
+                            <div class="flex justify-between px-2 py-1 bg-black border border-zinc-800 text-zinc-500">
+                                <span>Feather</span><span id="inv-feather">0</span>
+                            </div>
+                            <div class="flex justify-between px-2 py-1 bg-black border border-zinc-800 text-zinc-500">
+                                <span>Leaf</span><span id="inv-leaf">0</span>
+                            </div>
+                            <div class="flex justify-between px-2 py-1 bg-black border border-zinc-800 text-zinc-500">
+                                <span>Elec.</span><span id="inv-electronics">0</span>
+                            </div>
+                        </div>
+                        <div class="h-px bg-zinc-800 my-2"></div>
+                        <div class="flex justify-between items-center p-2 bg-zinc-900/30 border border-zinc-800 text-orange-400">
+                            <span class="flex items-center gap-2"><i data-lucide="zap" size="16"></i> Embers</span>
+                            <span id="inv-embers" class="text-xl">0</span>
+                        </div>
+                        <div id="drone-status" class="hidden mt-2 p-2 text-xs text-center bg-zinc-900 text-zinc-500 animate-pulse border border-zinc-800">
+                            DRONE IN FLIGHT...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+
+
+
+
+
+
+// ==========================================
+// SOUND MANAGER (REPLACEMENT)
+// ==========================================
+const sounds = {
+    intro: new Audio("sounds/intro.wav"),
+    bg: new Audio("sounds/bg.wav"),
+    fire: new Audio("sounds/fire.wav"),
+    strokefire: new Audio("sounds/strokefire.wav"),
+    drone: new Audio("sounds/drone.wav"),
+    return: new Audio("sounds/return.wav"),
+    forest: new Audio("sounds/forest.wav"),
+    ping: new Audio("sounds/ping.wav"),
+    station: new Audio("sounds/station.wav"),
+    yes: new Audio("sounds/yes.wav"),
+    eat: new Audio("sounds/eat.wav"),
+    storm: new Audio("sounds/storm.wav"),
+    blizard: new Audio("sounds/blizard.wav"),
+    talk: new Audio("sounds/talk.wav")
+};
+
+// loop settings
+sounds.bg.loop = true;
+sounds.fire.loop = true;
+
+// internal flags (avoid restarting identical loops too often)
+let _bgStarted = false;
+
+function playSound(name, { restart = true } = {}) {
+    const s = sounds[name];
+    if (!s) return;
+    try {
+        // If it's the bg loop, avoid restarting it repeatedly
+        if (name === 'bg') {
+            if (_bgStarted && !restart) return;
+            _bgStarted = true;
+        }
+        if (!restart && !s.paused) return;
+        s.currentTime = 0;
+        s.play().catch(()=>{ /* autoplay policy or other issue — ignore silently */ });
+    } catch(e){ /* ignore */ }
+}
+function stopSound(name) {
+    const s = sounds[name];
+    if (!s) return;
+    try {
+        s.pause();
+        s.currentTime = 0;
+        if (name === 'bg') _bgStarted = false;
+    } catch(e){}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+        // ==========================================
+        // 1. CONFIGURATION & ASSETS
+        // ==========================================
+        const CONSTANTS = {
+            TICK_MS: 1000,
+            BURN_RATE: 2,
+            BASE_HEAT_LOSS: 1.5,
+            BLIZZARD_HEAT_LOSS: 5.0, // Massive heat loss during blizzard
+            STOKE_COST: 1,
+            STOKE_TIME: 5,
+            HUNGER_DECAY_STATION: 0.5,
+            HUNGER_DECAY_FOREST: 4.0,
+            PASSIVE_WOOD_INTERVAL: 30,
+            DRONE_MIN_TIME: 2000,
+            DRONE_MAX_TIME: 5000,
+            DRONE_DAMAGE_MIN: 10,
+            DRONE_DAMAGE_MAX: 25,
+            REPAIR_COST: { metal: 1, electronics: 0 },
+            REBUILD_COST: { metal: 4, electronics: 1 }
+        };
+
+        const FULL_STORY = [
+            "The frost came without warning, turning the sky into a sheet of iron.",
+            "We huddled in the old station, burning books to keep the cold at bay.",
+            "The drone brought back a feather today. A bird? Or just a remnant?",
+            "I remember the city lights, before they flickered and died one by one.",
+            "The silence is the loudest thing here. It presses against the windows.",
+            "My hands are cracked and bleeding. The cold finds every weakness.",
+            "We found a cache of electronics in the forest. Old tech, useless now.",
+            "Is anyone else out there? The radio simply hisses static.",
+            "The fire is our only god now. We feed it, and it lets us live.",
+            "I dreamed of the ocean last night. Warm, salty air.",
+            "The trees in the forest look like frozen sentinels.",
+            "We are running out of memories to burn.",
+            "Survival is a habit, not a choice.",
+            "The embers whisper secrets when the wind dies down.",
+            "Every day is exactly the same, except slightly colder.",
+            "I saw a wolf yesterday. It looked as hungry as I feel.",
+            "Maybe the frost is a cleansing. A reset button for the world.",
+            "I fused two embers and saw a face I used to know.",
+            "Hope is a dangerous thing to keep in your pocket.",
+            "The station's walls are groaning under the weight of the ice."
+        ];
+
+        const HALLUCINATIONS = [
+            "Did the fire just whisper your name?",
+            "You feel a hand on your shoulder. There is no one there.",
+            "The shadows in the corner are getting longer.",
+            "I swear I heard a phone ringing.",
+            "Is this the first time we've been here? Or the thousandth?",
+            "The cold... it feels like it's thinking.",
+            "Don't let the fire go out. They are watching.",
+            "I can't feel my toes. Or maybe I never had them.",
+            "Who left that footprint in the ash?",
+            "I forgot my mother's face today.",
+            "The trees are moving when I look away.",
+            "Was that static on the radio, or screaming?",
+            "My reflection in the glass didn't blink when I did.",
+            "This station wasn't here yesterday.",
+            "The snow tastes like iron.",
+            "I keep hearing a child laughing outside.",
+            "There is something breathing under the floorboards.",
+            "Why are the stars in the wrong position?",
+            "I am the only one left. I am the only one left.",
+            "The fire isn't hot enough. It's never hot enough.",
+            "I found a letter in my pocket I don't remember writing.",
+            "Did the sun rise today? I can't remember.",
+            "The drone is watching me.",
+            "I saw a city in the flames, burning.",
+            "My hands look like they belong to a stranger.",
+            "I can hear the ice grinding against the foundation.",
+            "What if the frost never ends?",
+            "I smell ozone and burnt hair.",
+            "The darkness outside has a texture.",
+            "I think I died three days ago.",
+            "There are codes hidden in the wood grain.",
+            "Don't trust the silence.",
+            "I saw footprints leading into a wall.",
+            "The wind sounds like it's trying to speak.",
+            "My heart is beating too slowly.",
+            "Is this a simulation? Or hell?",
+            "I remember a blue sky. It feels like a lie now.",
+            "Something knocked on the door. I didn't answer.",
+            "The embers look like eyes.",
+            "I feel weightless, like I'm drifting.",
+            "Time is moving backwards.",
+            "I saw a bird made of glass.",
+            "The cold burns more than the fire.",
+            "Who is the man in the static?",
+            "I am forgetting words. Simple words.",
+            "The map keeps changing.",
+            "I feel a phantom limb.",
+            "There is a pattern in the frost on the window.",
+            "I am so very tired.",
+            "Wake up. Wake up. Wake up.",
+            "The logs are bleeding sap that looks like ink."
+        ];
+
+        // ==========================================
+        // 2. STATE MANAGEMENT
+        // ==========================================
+        let gameState = {
+            mode: 'station',
+            time: 0,
+            day: 1,
+            health: 100,
+            hunger: 100,
+            warmth: 30,
+            burnTime: 0,
+            wood: 2,
+            food: 2,
+            foodItems: { berries: 1, nuts: 1, root: 0, canned: 0 },
+            embers: [],
+            materials: { metal: 0, feather: 0, leaf: 0, electronics: 0 },
+            storySentences: FULL_STORY,
+            revealedIndices: new Set(),
+            logs: [],
+            dead: false,
+            rapidDecay: 0, // Tracks seconds of rapid cooling after fire extinguishes
+            
+            // Drone State
+            drone: {
+                active: false,
+                integrity: 100,
+                status: 'ready', // ready, flying, broken, crashed
+            },
+
+            // Weather State
+            weather: {
+                current: 'clear', // clear, storm, blizzard
+                timer: 0
+            }
+        };
+
+        // ==========================================
+        // 3. INITIALIZATION & INTRO
+        // ==========================================
+        
+      //  function initGame() {
+     //       gameState.embers.push(createEmber(0));
+       //     gameState.embers.push(createEmber(1));
+      //      playIntroSequence();
+      //  }
+
+
+        // Wait for user click to allow audio
+document.getElementById("btn-start").addEventListener("click", () => {
+    playSound("intro");       // Play intro.wav
+    playIntroSequence();      // Run your existing intro text logic
+    
+});
+
+        function playIntroSequence() {
+            playSound("intro");
+            const introLines = [
+                "You open your eyes...",
+                "The world has ended in ice.",
+                "OBJECTIVE: Gather Embers.",
+                "Fuse them to remember the past.",
+                "Discover why the world died.",
+                "Survive." 
+                
+
+            ];
+
+            const introEl = document.getElementById('intro-screen');
+            const contentEl = document.getElementById('intro-content');
+            let delay = 0;
+
+            introLines.forEach((line, index) => {
+                setTimeout(() => {
+                    contentEl.style.opacity = '0';
+                    setTimeout(() => {
+                        contentEl.innerText = line;
+                        contentEl.style.opacity = '1';
+                    }, 500);
+                }, delay);
+                delay += 3000;
+            });
+
+            setTimeout(() => {
+    introEl.style.transition = 'opacity 2s';
+    introEl.style.opacity = '0';
+    setTimeout(() => {
+        introEl.classList.add('hidden');
+        document.getElementById('game-container').classList.remove('opacity-0');
+        startLoop();
+        initCanvas();
+        updateUI();
+        addLog("System initialized. Shelter secure.");
+    }, 2000);
+}, delay + 1000);
+        }
+
+        function createEmber(sentenceIndex = null) {
+            return {
+                id: Math.random().toString(36).substr(2, 9),
+                sentenceIndex: sentenceIndex,
+                tags: ['dim', 'faint']
+            };
+        }
+
+        // ==========================================
+        // 4. CORE LOGIC (Window API)
+        // ==========================================
+
+        window.stokeFire = () => {
+            // Prevent stoking during bad weather
+            if (gameState.weather.current === 'storm' || gameState.weather.current === 'blizzard') {
+                addLog("Impossible. The wind kills the flame instantly.", "text-red-500");
+                return;
+            }
+
+            if (gameState.wood < CONSTANTS.STOKE_COST) {
+                addLog("Not enough wood.", "text-red-500");
+                return;
+            }
+            
+            gameState.wood -= CONSTANTS.STOKE_COST;
+            gameState.burnTime += CONSTANTS.STOKE_TIME;
+            playSound("strokefire"); // Stoke fire sound
+playSound("fire");       // Fire crackling loop
+
+            addLog("Fire stoked. (+5s Burn)", "text-orange-400");
+            updateUI();
+            flashFeedback("+WARMTH");
+        };
+
+        window.scavengeStation = () => {
+            if (gameState.hunger < 5) {
+                addLog("Too hungry to search.", "text-red-600");
+                return;
+            }
+
+            gameState.hunger -= 5;
+            const r = Math.random();
+
+            if (r > 0.7) {
+                addLog("Found nothing but dust.", "text-zinc-600");
+            } else if (r > 0.4) {
+                gameState.materials.metal++;
+                addLog("Found a scrap of Metal.", "text-green-400");
+            } else if (r > 0.25) {
+                gameState.materials.electronics++;
+                addLog("Found a damaged Circuit.", "text-green-400");
+            } else {
+                gameState.materials.metal++;
+                gameState.materials.electronics++;
+                addLog("Found a cache! Metal & Electronics.", "text-green-300");
+            }
+            updateUI();
+        };
+
+        window.handleDrone = () => {
+            if (gameState.drone.active) return;
+
+            // Case 1: Crashed - Need Rebuild
+            if (gameState.drone.status === 'crashed') {
+                if (gameState.materials.metal >= CONSTANTS.REBUILD_COST.metal && 
+                    gameState.materials.electronics >= CONSTANTS.REBUILD_COST.electronics) {
+                    
+                    gameState.materials.metal -= CONSTANTS.REBUILD_COST.metal;
+                    gameState.materials.electronics -= CONSTANTS.REBUILD_COST.electronics;
+                    gameState.drone.status = 'ready';
+                    gameState.drone.integrity = 100;
+                    addLog("Drone rebuilt. Systems online.", "text-green-400");
+                    updateUI();
+                } else {
+                    addLog(`Need ${CONSTANTS.REBUILD_COST.metal} Metal, ${CONSTANTS.REBUILD_COST.electronics} Elec to rebuild.`, "text-red-500");
+                }
+                return;
+            }
+
+            // Case 2: Broken - Need Repair
+            if (gameState.drone.status === 'broken') {
+                 if (gameState.materials.metal >= CONSTANTS.REPAIR_COST.metal) {
+                    gameState.materials.metal -= CONSTANTS.REPAIR_COST.metal;
+                    gameState.drone.status = 'ready';
+                    gameState.drone.integrity = 100;
+                    addLog("Drone repaired.", "text-green-400");
+                    updateUI();
+                 } else {
+                     addLog("Need 1 Metal to repair.", "text-red-500");
+                 }
+                 return;
+            }
+
+            // Case 3: Ready - Launch
+            if (gameState.drone.status === 'ready') {
+                // Weather Risk
+                let crashChance = 0.05; // base 5%
+                if (gameState.weather.current === 'storm') crashChance = 0.40; // Storm is high risk
+                if (gameState.weather.current === 'blizzard') crashChance = 0.80; // Blizzard is suicide
+                
+                // Integrity Risk
+                if (gameState.drone.integrity < 50) crashChance += 0.2;
+                if (gameState.drone.integrity < 20) crashChance += 0.4;
+
+                gameState.drone.active = true;
+                addLog("Drone launching...", "text-blue-400");
+                updateUI();
+
+                const flightTime = Math.random() * (CONSTANTS.DRONE_MAX_TIME - CONSTANTS.DRONE_MIN_TIME) + CONSTANTS.DRONE_MIN_TIME;
+
+                setTimeout(() => {
+                    gameState.drone.active = false;
+                    
+                    // Determine Outcome
+                    if (Math.random() < crashChance) {
+                        gameState.drone.status = 'crashed';
+                        gameState.drone.integrity = 0;
+                        addLog("CRITICAL FAILURE. Drone crashed in waste.", "text-red-600");
+                    } else {
+                        // Success
+                        const damage = Math.floor(Math.random() * (CONSTANTS.DRONE_DAMAGE_MAX - CONSTANTS.DRONE_DAMAGE_MIN) + CONSTANTS.DRONE_DAMAGE_MIN);
+                        gameState.drone.integrity = Math.max(0, gameState.drone.integrity - damage);
+                        
+                        if (gameState.drone.integrity <= 0) {
+                            gameState.drone.status = 'broken';
+                            addLog("Drone returned but systems fried. Needs repair.", "text-orange-500");
+                        } else {
+                            // Loot logic
+                            const roll = Math.random();
+                            if (roll < 0.4) {
+                                const mats = ['metal', 'feather', 'leaf', 'electronics'];
+                                const type = mats[Math.floor(Math.random() * mats.length)];
+                                gameState.materials[type]++;
+                                addLog(`Drone returned with 1 ${type}.`, "text-green-400");
+                            } else {
+                                let targetIndex = null;
+                                if (Math.random() > 0.5) targetIndex = Math.floor(Math.random() * gameState.storySentences.length);
+                                gameState.embers.push(createEmber(targetIndex));
+                                addLog("Drone returned with 1 Ember.", "text-orange-300");
+                            }
+                        }
+                    }
+                    updateUI();
+                }, flightTime);
+            }
+        };
+
+        window.rubHands = () => {
+            if (gameState.hunger > 0) {
+                gameState.hunger = Math.max(0, gameState.hunger - 1);
+                gameState.warmth = Math.min(100, gameState.warmth + 2);
+                flashFeedback("+HEAT");
+                updateUI();
+            } else {
+                addLog("Too weak to move...", "text-red-600");
+            }
+        };
+
+        window.fuseEmbers = () => {
+            if (gameState.embers.length < 2) {
+                addLog("Need at least 2 embers to fuse.", "text-zinc-500");
+                return;
+            }
+            const e1 = gameState.embers.shift();
+            const e2 = gameState.embers.shift();
+
+            let newSentenceIndex = null;
+            for(let i=0; i<gameState.storySentences.length; i++) {
+                if(!gameState.revealedIndices.has(i)) {
+                    newSentenceIndex = i;
+                    break;
+                }
+            }
+
+            if (newSentenceIndex !== null) {
+                playSound('yes');
+                const text = gameState.storySentences[newSentenceIndex];
+                showPopup(text);
+                gameState.revealedIndices.add(newSentenceIndex);
+                addLog("Fusion stable. Memory unlocked.", "text-purple-400");
+            } else {
+                addLog("Fusion unstable. No distinct memory formed.", "text-zinc-500");
+                gameState.embers.push(createEmber(null));
+            }
+            updateUI();
+        };
+
+        window.eatFood = () => {
+            if (gameState.food <= 0) {
+                addLog("No rations remaining.", "text-red-500");
+                return;
+            }
+            let eatenItem = "Ration";
+            const items = Object.keys(gameState.foodItems);
+            for (let item of items) {
+                if (gameState.foodItems[item] > 0) {
+                    gameState.foodItems[item]--;
+                    eatenItem = item.charAt(0).toUpperCase() + item.slice(1);
+                    break;
+                }
+            }
+            gameState.food--;
+            gameState.hunger = Math.min(100, gameState.hunger + 30);
+            gameState.health = Math.min(100, gameState.health + 5);
+            addLog(`Consumed ${eatenItem}.`, "text-green-400");
+            playSound('eat');
+            updateUI();
+        };
+
+        window.enterForest = () => {
+            gameState.mode = 'forest';
+            addLog("Entering Forest sector.");
+             playSound('forest');
+            updateUI();
+        };
+
+        window.enterStation = () => {
+            gameState.mode = 'station';
+            addLog("Returning to Station.");
+            playSound('station');
+            updateUI();
+        };
+
+        window.gatherManual = () => {
+            if(gameState.mode !== 'forest') return;
+            const roll = Math.random();
+            if(roll > 0.7) {
+                gameState.wood++;
+                flashFeedback("+WOOD");
+            } else if (roll > 0.55) {
+                const foodTypes = ['berries', 'nuts', 'root'];
+                const type = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+                gameState.foodItems[type]++;
+                gameState.food++;
+                const displayNames = { berries: 'Frostberries', nuts: 'Pine Nuts', root: 'Tundra Root' };
+                showNotification(`Found ${displayNames[type]}`);
+                playSound('ping');
+                flashFeedback("+FOOD");
+            } else if (roll > 0.45) {
+                gameState.materials.leaf++;
+                flashFeedback("+LEAF");
+            } else {
+                addLog("Scavenged nothing.");
+            }
+            gameState.hunger = Math.max(0, gameState.hunger - 2);
+            updateUI();
+        }
+
+        // ==========================================
+        // 5. WEATHER LOGIC
+        // ==========================================
+        function updateWeather() {
+            gameState.weather.timer--;
+            
+            if (gameState.weather.timer <= 0) {
+                // Change weather
+                const r = Math.random();
+                if (gameState.weather.current === 'clear') {
+                    // 30% chance of storm
+                    if(r > 0.7) setWeather('storm', 20);
+                } else if (gameState.weather.current === 'storm') {
+                    // Storm can clear or become blizzard
+                    if(r > 0.6) setWeather('blizzard', 15);
+                    else setWeather('clear', 30);
+                } else {
+                    // Blizzard always goes to clear
+                    setWeather('clear', 30);
+                }
+            }
+        }
+
+        function setWeather(type, duration) {
+            gameState.weather.current = type;
+            gameState.weather.timer = duration;
+            
+            const label = document.getElementById('weather-indicator');
+            label.classList.remove('hidden');
+            
+            if (type === 'blizzard') {
+                gameState.burnTime = 0; // Extinguish fire
+                stopSound("fire");
+                playSound('blizard');
+
+                gameState.rapidDecay = 3; // Trigger rapid cooling
+                addLog("BLIZZARD! FIRE EXTINGUISHED!", "text-red-600");
+                
+                label.innerText = "!! BLIZZARD !!";
+                label.className = "absolute top-2 right-2 z-10 bg-red-900/80 px-2 py-1 border border-red-500 text-white text-sm uppercase tracking-widest animate-pulse";
+                document.getElementById('blizzard-fx').style.display = 'block';
+            
+            } else if (type === 'storm') {
+                gameState.burnTime = 0; // Extinguish fire
+                stopSound("fire");
+                playSound('storm');
+
+                gameState.rapidDecay = 3; // Trigger rapid cooling
+                addLog("STORM HIT! The wind kills the fire!", "text-red-500");
+
+                label.innerText = "ICE STORM";
+                label.className = "absolute top-2 right-2 z-10 bg-blue-900/80 px-2 py-1 border border-blue-500 text-white text-sm uppercase tracking-widest";
+                document.getElementById('blizzard-fx').style.display = 'none';
+            
+            } else {
+                label.innerText = "CLEAR SKY";
+                label.className = "absolute top-2 right-2 z-10 bg-black/80 px-2 py-1 border border-zinc-800 text-blue-300 text-sm uppercase tracking-widest";
+                document.getElementById('blizzard-fx').style.display = 'none';
+            }
+            updateUI();
+        }
+
+        // ==========================================
+        // 6. GAME LOOP
+        // ==========================================
+        function startLoop() {
+            setInterval(() => {
+                if (gameState.dead) return;
+
+                gameState.time++;
+                updateWeather();
+
+                // 1. Burn Time & Warmth
+                
+                // Handle Rapid Decay (Just extinguished)
+                if (gameState.rapidDecay > 0) {
+                    gameState.warmth = Math.max(0, gameState.warmth - 30); // Fast drop
+                    gameState.rapidDecay--;
+                }
+
+                if (gameState.burnTime > 0) {
+                     if (sounds.fire && sounds.fire.paused) playSound('fire');
+                    gameState.burnTime--;
+                    // Heat gain
+                    gameState.warmth = Math.min(100, gameState.warmth + CONSTANTS.BURN_RATE);
+                } else {
+                    if (sounds.fire && !sounds.fire.paused) stopSound('fire');
+                    let loss = CONSTANTS.BASE_HEAT_LOSS;
+                    if (gameState.weather.current === 'blizzard') loss = CONSTANTS.BLIZZARD_HEAT_LOSS;
+                    if (gameState.weather.current === 'storm') loss += 0.5;
+                    if (gameState.hunger < 10) loss += 1;
+                    gameState.warmth = Math.max(0, gameState.warmth - loss);
+                }
+
+                // 2. Hunger Decay
+                const hungerLoss = gameState.mode === 'forest' ? CONSTANTS.HUNGER_DECAY_FOREST : CONSTANTS.HUNGER_DECAY_STATION;
+                gameState.hunger = Math.max(0, gameState.hunger - hungerLoss);
+
+                // 3. Health Logic
+                if (gameState.hunger <= 0 || gameState.warmth <= 0) {
+                    gameState.health -= 1;
+                } else if (gameState.hunger > 50 && gameState.warmth > 50 && gameState.health < 100) {
+                    gameState.health += 0.5;
+                }
+
+                // 4. Random Hallucinations
+                if (Math.random() < 0.03) {
+                    const hall = HALLUCINATIONS[Math.floor(Math.random() * HALLUCINATIONS.length)];
+                    showPopup(hall, true);
+                    addLog("???", "text-red-600");
+                }
+
+                // 5. Passive Wood
+                if (gameState.mode === 'station' && gameState.time % CONSTANTS.PASSIVE_WOOD_INTERVAL === 0) {
+                    gameState.wood += 2;
+                    addLog("Wind blew some branches near the door.", "text-zinc-600");
+                }
+
+                // 6. Day Cycle
+                if (gameState.time % 60 === 0) {
+                    gameState.day++;
+                    addLog(`Day ${gameState.day} begins.`);
+                }
+
+                if (gameState.health <= 0) {
+                    gameState.dead = true;
+                    document.getElementById('death-screen').classList.remove('hidden');
+                    document.getElementById('death-screen').classList.add('flex');
+                }
+
+                updateUI();
+
+            }, CONSTANTS.TICK_MS);
+        }
+
+        // ==========================================
+        // 7. UI HELPERS
+        // ==========================================
+        function addLog(text, colorClass = "text-zinc-400") {
+            const logObj = { text, color: colorClass, id: Date.now() };
+            gameState.logs.unshift(logObj);
+            if (gameState.logs.length > 30) gameState.logs.pop();
+            
+            const container = document.getElementById('log-container');
+            container.innerHTML = gameState.logs.map(l => 
+                `<div class="${l.color}">> ${l.text}</div>`
+            ).join('');
+        }
+
+        function updateUI() {
+            if (gameState.dead) return;
+
+            // Bars
+            document.getElementById('bar-health').style.width = `${gameState.health}%`;
+            document.getElementById('bar-warmth').style.height = `${gameState.warmth}%`;
+            document.getElementById('bar-hunger').style.height = `${gameState.hunger}%`;
+
+            // Text Values
+            document.getElementById('val-day').innerText = gameState.day;
+            document.getElementById('inv-wood').innerText = gameState.wood;
+            document.getElementById('inv-food').innerText = gameState.food;
+            
+            document.getElementById('food-berries').innerText = gameState.foodItems.berries;
+            document.getElementById('food-nuts').innerText = gameState.foodItems.nuts;
+            document.getElementById('food-root').innerText = gameState.foodItems.root;
+            document.getElementById('food-canned').innerText = gameState.foodItems.canned;
+
+            document.getElementById('inv-metal').innerText = gameState.materials.metal;
+            document.getElementById('inv-feather').innerText = gameState.materials.feather;
+            document.getElementById('inv-leaf').innerText = gameState.materials.leaf;
+            document.getElementById('inv-electronics').innerText = gameState.materials.electronics;
+            document.getElementById('inv-embers').innerText = gameState.embers.length;
+
+            // Mode Styling & Buttons
+            const modeLabel = document.getElementById('mode-indicator');
+            const stationBtns = document.querySelectorAll('.station-btn');
+            const forestBtns = document.querySelectorAll('.forest-btn');
+            const travelBtn = document.getElementById('btn-travel');
+
+            if (gameState.mode === 'station') {
+                modeLabel.innerText = "STATION";
+                modeLabel.className = "text-orange-400 uppercase tracking-widest";
+                stationBtns.forEach(b => b.classList.remove('hidden'));
+                forestBtns.forEach(b => b.classList.add('hidden'));
+                travelBtn.innerHTML = `<i data-lucide="tent" size="18"></i> Go To Forest`;
+            } else {
+                modeLabel.innerText = "FOREST";
+                modeLabel.className = "text-green-400 uppercase tracking-widest";
+                stationBtns.forEach(b => b.classList.add('hidden'));
+                forestBtns.forEach(b => b.classList.remove('hidden'));
+                travelBtn.innerHTML = `<i data-lucide="home" size="18"></i> Go to Station`;
+            }
+
+            // Rub Hands Button Visibility (Blizzard OR Very Cold)
+            const btnRub = document.getElementById('btn-rub');
+            if (gameState.weather.current === 'blizzard' || gameState.weather.current === 'storm' || gameState.warmth < 20) {
+                btnRub.classList.remove('hidden');
+            } else {
+                btnRub.classList.add('hidden');
+            }
+
+            // Button States
+            const btnStoke = document.getElementById('btn-stoke');
+            const badWeather = gameState.weather.current === 'storm' || gameState.weather.current === 'blizzard';
+            
+            if (badWeather) {
+                btnStoke.disabled = true;
+                btnStoke.innerHTML = `<i data-lucide="x" size="18"></i> FIRE EXTINGUISHED`;
+                btnStoke.classList.add('text-red-500');
+            } else {
+                btnStoke.disabled = gameState.wood < CONSTANTS.STOKE_COST;
+                btnStoke.innerHTML = `<i data-lucide="flame" size="18"></i> Stoke Fire`;
+                btnStoke.classList.remove('text-red-500');
+            }
+
+            document.getElementById('btn-eat').disabled = gameState.food <= 0;
+            document.getElementById('btn-fuse').disabled = gameState.embers.length < 2;
+            
+            // Drone UI Logic
+            const droneBtn = document.getElementById('btn-drone');
+            const droneLabel = document.getElementById('drone-label');
+            const droneBar = document.getElementById('drone-integrity');
+            
+            droneBar.style.width = `${gameState.drone.integrity}%`;
+            // Color code integrity
+            if (gameState.drone.integrity > 60) droneBar.className = "h-full bg-green-500 transition-all";
+            else if (gameState.drone.integrity > 30) droneBar.className = "h-full bg-yellow-500 transition-all";
+            else droneBar.className = "h-full bg-red-600 transition-all";
+
+            if (gameState.drone.active) {
+                droneBtn.disabled = true;
+                droneLabel.innerText = "IN FLIGHT...";
+                droneLabel.parentElement.classList.add('animate-pulse');
+            } else if (gameState.drone.status === 'crashed') {
+                droneBtn.disabled = false;
+                droneLabel.innerText = "REBUILD (4M 1E)";
+                droneBtn.classList.add('text-red-500');
+            } else if (gameState.drone.status === 'broken') {
+                droneBtn.disabled = false;
+                droneLabel.innerText = "REPAIR (1M)";
+                droneBtn.classList.add('text-yellow-500');
+            } else {
+                // Ready
+                droneBtn.disabled = false;
+                droneLabel.innerText = "SEND DRONE";
+                droneBtn.classList.remove('text-red-500', 'text-yellow-500');
+                droneLabel.parentElement.classList.remove('animate-pulse');
+            }
+
+            renderStoryPanel();
+        }
+
+        function renderStoryPanel() {
+            const container = document.getElementById('story-container');
+            let html = '';
+            
+            gameState.storySentences.forEach((sentence, idx) => {
+                const isRevealed = gameState.revealedIndices.has(idx);
+                if (isRevealed) {
+                    html += `<p class="glitch-text font-bold text-white/90 border-l-2 border-orange-900 pl-2" data-text="${sentence}">${sentence}</p>`;
+                } else {
+                    html += `<p class="masked-text bg-zinc-900 rounded px-1 opacity-20 select-none">This memory is frozen in time.</p>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function showPopup(text, isSpooky = false) {
+            const layer = document.getElementById('popup-layer');
+            const el = document.createElement('div');
+            if (isSpooky) playSound('talk');
+
+            
+            const borderColor = isSpooky ? 'border-red-600' : 'border-white';
+            const titleColor = isSpooky ? 'text-red-600' : 'text-orange-400';
+            const titleText = isSpooky ? 'PARANOIA' : 'Memory Restored';
+            
+            el.className = `popup-flash border ${borderColor} bg-black p-6 text-center shadow-2xl`;
+            el.innerHTML = `<div class="${titleColor} text-sm uppercase mb-2 tracking-widest">${titleText}</div>"${text}"`;
+            layer.appendChild(el);
+            setTimeout(() => el.remove(), 4000);
+        }
+
+        function showNotification(text) {
+            const layer = document.getElementById('notification-layer');
+            const el = document.createElement('div');
+            el.className = 'notification-toast';
+            el.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6"></i> ${text}`;
+            layer.appendChild(el);
+            lucide.createIcons();
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        function flashFeedback(text) {
+            const el = document.getElementById('canvas-feedback');
+            el.innerText = text;
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0px)';
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-10px)';
+            }, 800);
+        }
+
+        // ==========================================
+        // 8. CANVAS ENGINE
+        // ==========================================
+        function initCanvas() {
+            const cvs = document.getElementById('game-canvas');
+            const ctx = cvs.getContext('2d');
+            let particles = [];
+            let snowParticles = [];
+
+            // Init Snow/Storm Particles
+            for(let i=0; i<100; i++) {
+                snowParticles.push({
+                    x: Math.random() * cvs.width,
+                    y: Math.random() * cvs.height,
+                    r: Math.random() * 2 + 1,
+                    v: Math.random() * 2 + 1
+                });
+            }
+
+            const trees = [];
+            for(let i=0; i<20; i++) {
+                trees.push({
+                    x: Math.random() * cvs.width,
+                    y: Math.random() * 100 + 200,
+                    h: Math.random() * 60 + 40
+                });
+            }
+
+            document.getElementById('btn-stoke').addEventListener('click', window.stokeFire);
+            document.getElementById('btn-drone').addEventListener('click', window.handleDrone);
+            document.getElementById('btn-fuse').addEventListener('click', window.fuseEmbers);
+            document.getElementById('btn-scavenge-station').addEventListener('click', window.scavengeStation);
+            document.getElementById('btn-eat').addEventListener('click', window.eatFood);
+            document.getElementById('btn-rub').addEventListener('click', window.rubHands);
+            document.getElementById('btn-travel').addEventListener('click', () => {
+                if(gameState.mode === 'station') window.enterForest();
+                else window.enterStation();
+            });
+
+            cvs.addEventListener('mousedown', (e) => {
+                if (gameState.mode === 'forest') {
+                    window.gatherManual();
+                    const rect = cvs.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) * (cvs.width / rect.width);
+                    const y = (e.clientY - rect.top) * (cvs.height / rect.height);
+                    createExplosion(x, y, '#4ade80');
+                }
+            });
+
+            function createExplosion(x, y, color) {
+                for(let i=0; i<8; i++) {
+                    particles.push({
+                        x, y, 
+                        vx: (Math.random() - 0.5) * 4, 
+                        vy: (Math.random() - 0.5) * 4, 
+                        life: 30, 
+                        color: color
+                    });
+                }
+            }
+
+            function loop() {
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+                // Weather Physics
+                let snowSpeedX = 0;
+                let snowSpeedY = 0;
+
+                if (gameState.weather.current === 'storm') { 
+                    // Horizontal high speed (Ice Storm)
+                    snowSpeedX = 8; 
+                    snowSpeedY = 0.5;
+                }
+                if (gameState.weather.current === 'blizzard') { 
+                    // Chaotic high speed
+                    snowSpeedX = 4; 
+                    snowSpeedY = 4; 
+                }
+
+                if (gameState.mode === 'station') {
+                    ctx.fillStyle = '#111';
+                    ctx.fillRect(100, 100, 440, 260);
+
+                    // Fire Logic
+                    // Only draw fire if burnTime > 0
+                    if (gameState.burnTime > 0) {
+                        let intensity = Math.max(0.1, gameState.warmth / 100);
+                        
+                        const particleChance = intensity * 0.8;
+                        
+                        if (Math.random() < particleChance) {
+                             particles.push({
+                                 x: cvs.width/2 + (Math.random()-0.5)*(intensity * 60),
+                                 y: cvs.height - 50,
+                                 vx: (Math.random()-0.5)*2,
+                                 vy: -Math.random()*(intensity * 6) - 1,
+                                 life: 40 + Math.random()*40,
+                                 color: Math.random() > 0.5 ? '#f97316' : '#ef4444',
+                                 size: Math.random() * (intensity * 8) + 2
+                             });
+                        }
+                    }
+
+                    ctx.fillStyle = '#573a25';
+                    ctx.fillRect(cvs.width/2 - 20, cvs.height - 50, 40, 10);
+                    ctx.fillRect(cvs.width/2 - 15, cvs.height - 60, 30, 10);
+                } else {
+                    ctx.fillStyle = '#18181b';
+                    ctx.fillRect(0, cvs.height - 40, cvs.width, 40);
+                    trees.forEach(t => {
+                        ctx.fillStyle = '#14532d';
+                        ctx.fillRect(t.x, cvs.height - 40 - t.h, 10, t.h);
+                        ctx.fillStyle = '#166534';
+                        ctx.fillRect(t.x - 10, cvs.height - 40 - t.h - 20, 30, 30);
+                    });
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px VT323';
+                    ctx.fillText("CLICK TO GATHER", cvs.width/2 - 50, 50);
+                }
+
+                // Draw Particles
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    p.size *= 0.95;
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(p.x, p.y, p.size || 2, p.size || 2);
+                    if (p.life <= 0) particles.splice(i, 1);
+                }
+
+                // Draw Storm/Blizzard
+                if (snowSpeedX > 0 || snowSpeedY > 0) {
+                    ctx.fillStyle = 'rgba(200, 220, 255, 0.6)';
+                    snowParticles.forEach(p => {
+                        p.y += p.v * snowSpeedY;
+                        p.x += p.v * snowSpeedX;
+                        
+                        if (p.y > cvs.height) p.y = 0;
+                        if (p.x > cvs.width) p.x = 0;
+                        
+                        // Storm looks like streaks
+                        if (gameState.weather.current === 'storm') {
+                            ctx.fillRect(p.x, p.y, 15, 2); // Horizontal streaks
+                        } else {
+                            ctx.fillRect(p.x, p.y, p.r, p.r); // Normal dots
+                        }
+                    });
+                }
+
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        lucide.createIcons();
+        //initGame();
+
+
+
+
+window.onload = () => {
+    const startBtn = document.getElementById("btn-start");
+    const startScreen = document.getElementById("start-screen");
+
+    startBtn.addEventListener("click", () => {
+        // Guaranteed removal of overlay
+        if (startScreen) {
+            startScreen.parentNode.removeChild(startScreen);
+        }
+
+        // Start sound and intro
+        playSound("intro");
+       // initGame();
+    });
+};
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>
